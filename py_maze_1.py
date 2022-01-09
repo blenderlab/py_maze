@@ -90,7 +90,11 @@ def solveMazeUtil(maze, x, y, sol):
         
         # mark x, y as part of solution path
         sol[x][y] = 2
-        
+          # If moving in y direction doesn't give solution then
+        # Move back in x direction
+        if solveMazeUtil(maze, x - 1, y, sol) == True:
+            return True
+      
         # Move forward in x direction
         if solveMazeUtil(maze, x + 1, y, sol) == True:
             return True
@@ -100,10 +104,6 @@ def solveMazeUtil(maze, x, y, sol):
         if solveMazeUtil(maze, x, y + 1, sol) == True:
             return True
         
-        # If moving in y direction doesn't give solution then
-        # Move back in x direction
-        if solveMazeUtil(maze, x - 1, y, sol) == True:
-            return True
             
         # If moving in backwards in x direction doesn't give solution
         # then Move upwards in y direction

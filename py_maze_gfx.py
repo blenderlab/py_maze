@@ -23,16 +23,18 @@ img_tree2=pygame.transform.scale(img_tree2, (30,30))
 img_tree3=pygame.image.load("assets/tree3.png")
 img_tree3=pygame.transform.scale(img_tree3, (30,40))
 
-def prochaineCase(x,y):
+def prochainesCase(x,y,visited):
     possibles = []
-    if (x>0) : possibles.append((x-1,y))
-    if (y>0) : possibles.append((x,y-1))
-    if (y<NBCELL-1) : possibles.append((x,y+1))
-    if (x<NBCELL-1) : possibles.append((x+1,y))
-    return (random.choice(possibles))
-        
+    if (x>0 and visited[x-1][y]==0)  : possibles.append((x-1,y))
+    if (y>0  and visited[x][y-1]==0) : possibles.append((x,y-1))
+    if (y<NBCELL-1  and visited[x][y+1]==0) : possibles.append((x,y+1))
+    if (x<NBCELL-1  and visited[x+1][y]==0) : possibles.append((x+1,y))
+    random.shuffle(possibles)
+    return (possibles)
+
 def genererLaby():
     maze = []
+    visited = []
     for i in range(0,NBCELL):
         line=[]
         for j in range(0,NBCELL):
@@ -40,18 +42,40 @@ def genererLaby():
             if (random.randint(0,10)==5):
                 line.append(random.randint(1,4))
             else :
-                line.append(1)
-                
+                line.append(1)     
         maze.append(line)
-    # generate a path : 
-    x,y = 0,0
-    for i in range(0,300):
-       x,y = prochaineCase(x,y)
-       maze[x][y]=0
-       afficherLaby(maze)
-       pygame.display.flip()
-    return(maze)
+    # generate a visited array; filled of 0:    
+    for i in range(0,NBCELL):
+        line=[]
+        for j in range(0,NBCELL):
+            line.append(0)
+        visited.append(line)
+    return(maze,visited)
+ 
+def sortirLaby(laby,x,y): 
+     """
+    return True if a path is found
+    return false if no path found 
+    """
+    #we are on the last cell (EXIT ! yeaaah!) :
+     if x==NBCELL-1 and y==NBCELL-1 :
+         return True
+     visited[x][y]=1
 
+     listechoix = prochainesCase(x,y,visited)
+     for choix in listechoix :
+        afficherLaby(laby)
+        pygame.display.flip()
+        if sortirLaby(laby,choix[0],choix[1]):
+            laby[choix[0]][choix[1]]=0
+            return True
+        # No exit on this way :
+        # BAcktracking !
+        else :
+            visited[choix[0]][choix[1]]=0
+            laby[choix[0]][choix[1]]=1
+            return False
+       
 
 def afficherLaby(l):
     # size of a square on the screen : 
@@ -84,7 +108,7 @@ clock = pygame.time.Clock()
 #main loop :
 playing = True
 
-laby = genererLaby()
+laby,visited = genererLaby()
 
 while playing:
     # manage events (keys....)
@@ -99,6 +123,7 @@ while playing:
                laby = genererLaby()
     # fill the screen in white : 
     screen.fill((0,0,0)) # Beware : the parameter is a tuple
+    sortirLaby(laby,0,0)
     afficherLaby(laby)
     pygame.display.update()
     clock.tick(20) # 20 fps

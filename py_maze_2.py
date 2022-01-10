@@ -87,10 +87,6 @@ class Maze:
             current_cell = next_cell
             nv += 1
 
-
-    
-
-
 # Maze dimensions (ncols, nrows)
 nx, ny = 15, 15
 # Maze entry position

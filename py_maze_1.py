@@ -45,8 +45,8 @@ def printSolution( sol ):
 def drawSolution( sol ):
     
     screen.fill((0,0,0))
-    for numligne in range(0,N):
-        for numcol in range(0,N):
+    for numcol in range(0,N):
+        for numligne in range(0,N):
             if maze[numligne][numcol]==1:
                 pygame.draw.rect(screen, (100,000,100), (numcol*CELLSIZE, numligne*CELLSIZE, w, w))
             if maze[numligne][numcol]==0:

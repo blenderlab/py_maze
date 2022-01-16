@@ -1,6 +1,6 @@
 import pygame
 import random
-
+import time
 # https://pad.blenderlab.fr/p/labyrinth
 
 """
@@ -19,53 +19,47 @@ img_sand=pygame.transform.scale(img_sand, (30,25))
 img_tree1=pygame.image.load("assets/tree1.png")
 img_tree1=pygame.transform.scale(img_tree1, (30,40))
 
-img_tree2=pygame.image.load("assets/tree2.png")
-img_tree2=pygame.transform.scale(img_tree2, (30,30))
-img_tree3=pygame.image.load("assets/tree3.png")
-img_tree3=pygame.transform.scale(img_tree3, (30,40))
-
 def countn(x,y):
     n=0
-    if x>0 and maze[x-1][y]>0 : n=n+1
+    if x>0 and maze[x-1][y]>0   : n=n+1
     if x<NBCELL-1 and maze[x+1][y]>0 : n=n+1
     if y>0 and maze[x][y-1]>0 : n=n+1
     if y<NBCELL-1 and maze[x][y+1]>0 : n=n+1
     return n
 
-def prochainesCase(x,y):
-    possibles = []
-    if (x>0 and visited[x-1][y]==0)  :
-        if (countn(x-1,y)>2):possibles.append((x-1,y))
-    if (y>0  and visited[x][y-1]==0) :
-         if (countn(x,y-1)>2):possibles.append((x,y-1))
-    if (y<NBCELL-1  and visited[x][y+1]==0) :
-         if (countn(x,y+1)>2): possibles.append((x,y+1))
-    if (x<NBCELL-1  and visited[x+1][y]==0) :
-         if (countn(x+1,y)>2):possibles.append((x+1,y))
-    random.shuffle(possibles)
-    return (possibles)
 
-def genererLaby():
+def preparerLaby():
     maze=[]
     visited=[]
+    # generate a free array; filled of 1:   (walls) 
     for i in range(0,NBCELL):
         line=[]
         for j in range(0,NBCELL):
-            ## chose randomly a wall or a path 
-            if (random.randint(0,10)==5):
-                line.append(random.randint(1,4))
-            else :
-                line.append(1)     
+            line.append(1)     
         maze.append(line)
-    # generate a visited array; filled of 0:    
+    # generate an unvisited array; filled of 0:    
     for i in range(0,NBCELL):
         line=[]
         for j in range(0,NBCELL):
             line.append(0)
         visited.append(line)
     return(maze,visited)
+
+def prochainesCase(x,y):
+    # if coordinates are in the field AND there is at least 3 cases free around next one :
+    possibles = []
+    if (x>1 and visited[x-1][y]==0 )  :
+        if (countn(x-1,y)==3):possibles.append((x-1,y))
+    if (y>1  and visited[x][y-1]==0) :
+         if (countn(x,y-1)==3):possibles.append((x,y-1))
+    if (y<NBCELL-1  and visited[x][y+1]==0) :
+         if (countn(x,y+1)==3): possibles.append((x,y+1))
+    if (x<NBCELL-1  and visited[x+1][y]==0) :
+         if (countn(x+1,y)==3):possibles.append((x+1,y))
+    random.shuffle(possibles)
+    return (possibles)
  
-def sortirLaby(x,y): 
+def dessinerLaby(x,y): 
     """
     return True if a path is found
     return false if no path found 
@@ -73,24 +67,33 @@ def sortirLaby(x,y):
     #we are on the last cell (EXIT ! yeaaah!) :
     if x==NBCELL-2 and y==NBCELL-2 :
          return True
-    visited[x][y]=1
+    # Stipulate that our position is part of the path.
     maze[x][y]=0
-
+    visited[x][y]=1
+    # find other possibles ways:
     listechoix = prochainesCase(x,y)
+
+    # if no way out -> backtrack : position is not a path and return false.
+    if len(listechoix)==0:
+        maze[x][y]=1
+        return False
+    # for each choice...
     for choix in listechoix :
         afficherLaby()
-        if sortirLaby(choix[0],choix[1]):
-            return True
-        # No exit on this way :
-        # BAcktracking !
-        else :
-            visited[choix[0]][choix[1]]=1
+        #... try to find a way out :
+        if dessinerLaby(choix[0],choix[1]):
+            # if it is, adding our point.
             maze[choix[0]][choix[1]]=0
-            return False
-
+            return True
+            
+    # all the possible ways are wrong : return false...
+    return False
+    
 
 
 def afficherLaby():
+    screen.fill((0,0,0)) # Beware : the parameter is a tuple
+  
     # size of a square on the screen : 
     cellw = 400//NBCELL
     for j in range(0,NBCELL):
@@ -109,7 +112,7 @@ def afficherLaby():
                 screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
                 screen.blit(img_tree3,(280+i*(cellw-6)-j*12,10+j*(cellw-13)+i*7))
     pygame.display.flip()
-     
+    time.sleep( 0.05 ) 
 #Init the pygame engine 
 pygame.init()
 # Screen size :
@@ -122,7 +125,7 @@ clock = pygame.time.Clock()
 #main loop :
 playing = True
 
-maze,visited = genererLaby()
+maze,visited = preparerLaby()
 
 while playing:
     # manage events (keys....)
@@ -137,7 +140,8 @@ while playing:
                laby = genererLaby()
     # fill the screen in white : 
     screen.fill((0,0,0)) # Beware : the parameter is a tuple
-    sortirLaby(1,1)
+    if (dessinerLaby(1,1)):
+        print("fini!")
     afficherLaby()
     pygame.display.update()
     clock.tick(20) # 20 fps

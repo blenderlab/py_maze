@@ -1,7 +1,7 @@
 import pygame
 import random
 import time
-# https://pad.blenderlab.fr/p/labyrinth
+# available on git : https://github.com/blenderlab/py_maze.git
 
 """
 0 = path
@@ -133,7 +133,7 @@ def afficherLaby(curx,cury):
     
     for j in range(0,NBCELL):
         for i in range(0,NBCELL):
-            # choose the picture to draw : 
+            # choose the pictcdpure to draw : 
             if (maze[i][j]==1):
                 screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
             if (maze[i][j]==0):
@@ -158,7 +158,7 @@ def afficherLaby(curx,cury):
     # update the screen display :   
     pygame.display.flip()
     #some slow down procedure ...
-    time.sleep( 0.05 )
+    time.sleep( 0.1 )
     
     
 #Init the pygame engine 

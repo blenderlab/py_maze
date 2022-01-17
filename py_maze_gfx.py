@@ -7,15 +7,22 @@ import time
 0 = path
 1 = wall
 2 = unknown
+3 = spot (start/end)
 """
 
-NBCELL = 20
-maze = []
-visited = []
+
+NBCELL = 20 #size of the square maze (width) 
+maze = [] # contains the area
+visited = [] # contains the visited spots
+
+# some gfx :
 img_grass=pygame.image.load("assets/grass.png")
 img_grass=pygame.transform.scale(img_grass, (30,25))
 img_sand=pygame.image.load("assets/sand.png")
 img_sand=pygame.transform.scale(img_sand, (30,25))
+img_spot=pygame.image.load("assets/spot.png")
+img_spot=pygame.transform.scale(img_spot, (30,25))
+# and a little tree 
 img_tree1=pygame.image.load("assets/tree1.png")
 img_tree1=pygame.transform.scale(img_tree1, (30,40))
 
@@ -29,6 +36,12 @@ def countn(x,y):
 
 
 def preparerLaby():
+    """
+    # Function to generate an empty field:
+    # all places are walls
+    # all places are unvisited
+    # start & end are marked as SPOT
+    """
     maze=[]
     visited=[]
     # generate a free array; filled of 1:   (walls) 
@@ -43,9 +56,16 @@ def preparerLaby():
         for j in range(0,NBCELL):
             line.append(0)
         visited.append(line)
+    # mark start & end as SPOT places :
+    maze[1][1]=3
+    maze[NBCELL-2][NBCELL-2]=3
+    # send the 2 arrays : maze & visited 
     return(maze,visited)
 
 def prochainesCase(x,y):
+    """
+    returns a collection of tuples (x,y) of available places to go
+    """
     # if coordinates are in the field AND there is at least 3 cases free around next one :
     possibles = []
     if (x>1 and visited[x-1][y]==0 )  :
@@ -59,7 +79,7 @@ def prochainesCase(x,y):
     random.shuffle(possibles)
     return (possibles)
  
-def dessinerLaby(x,y): 
+def genererLaby(x,y): 
     """
     return True if a path is found
     return false if no path found 
@@ -81,7 +101,7 @@ def dessinerLaby(x,y):
     for choix in listechoix :
         afficherLaby()
         #... try to find a way out :
-        if dessinerLaby(choix[0],choix[1]):
+        if genererLaby(choix[0],choix[1]):
             # if it is, adding our point.
             maze[choix[0]][choix[1]]=0
             return True
@@ -92,12 +112,20 @@ def dessinerLaby(x,y):
 
 
 def afficherLaby():
+    """
+    procedure to draw the maze on the screen (isometric view)
+    """
     screen.fill((0,0,0)) # Beware : the parameter is a tuple
-  
     # size of a square on the screen : 
+    # Make sure start/end are marked as spot : 
+    maze[1][1]=3
+    maze[NBCELL-2][NBCELL-2]=3
+    # define the cell Width :
     cellw = 400//NBCELL
+    
     for j in range(0,NBCELL):
         for i in range(0,NBCELL):
+            # choose the picture to draw : 
             if (maze[i][j]==1):
                 screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
             if (maze[i][j]==0):
@@ -106,13 +134,13 @@ def afficherLaby():
                 screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
                 screen.blit(img_tree1,(280+i*(cellw-6)-j*12,10+j*(cellw-13)+i*7))
             if (maze[i][j]==3):
-                screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
-                screen.blit(img_tree2,(280+i*(cellw-6)-j*12,10+j*(cellw-13)+i*7))
-            if (maze[i][j]==4):
-                screen.blit(img_grass,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
-                screen.blit(img_tree3,(280+i*(cellw-6)-j*12,10+j*(cellw-13)+i*7))
+                screen.blit(img_spot,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
+    # update the screen display :   
     pygame.display.flip()
-    time.sleep( 0.05 ) 
+    #some slow down procedure ...
+    time.sleep( 0.05 )
+    
+    
 #Init the pygame engine 
 pygame.init()
 # Screen size :
@@ -122,29 +150,43 @@ screen = pygame.display.set_mode(size)
 # important : the window's caption :
 pygame.display.set_caption("Laby algo")
 clock = pygame.time.Clock()
-#main loop :
-playing = True
 
+# get a new maze & its visited array :
 maze,visited = preparerLaby()
 
+#main loop :
+playing = True
+generating = True
 while playing:
     # manage events (keys....)
     # force all events to be processed : 
     pygame.event.pump()
     for event in pygame.event.get():
+        # if a key is pressed :
         if event.type == pygame.KEYDOWN :
+            # and the key is ESCAPE :
             if event.key == pygame.K_ESCAPE:
                 pygame.quit() # close pygame
                 raise SystemExit #for a system close
+            # and if the key is G
             if event.key == pygame.K_g:
-               laby = genererLaby()
+                maze,visited = preparerLaby()
+                generating=True
     # fill the screen in white : 
     screen.fill((0,0,0)) # Beware : the parameter is a tuple
-    if (dessinerLaby(1,1)):
-        print("fini!")
+    if generating:
+        if genererLaby(1,1):
+            print("Finished !")
+            generating=False
+        else :
+            print("No way found...trying again")
+            maze,visited = preparerLaby()
+
+            
+            
+
     afficherLaby()
-    pygame.display.update()
-    clock.tick(20) # 20 fps
+   
 pygame.quit()
 
 

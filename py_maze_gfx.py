@@ -14,6 +14,7 @@ import time
 NBCELL = 20 #size of the square maze (width) 
 maze = [] # contains the area
 visited = [] # contains the visited spots
+backtrack = 0
 
 # some gfx :
 img_grass=pygame.image.load("assets/grass.png")
@@ -26,6 +27,8 @@ img_spot=pygame.transform.scale(img_spot, (30,25))
 img_tree1=pygame.image.load("assets/tree1.png")
 img_tree1=pygame.transform.scale(img_tree1, (30,40))
 
+img_player=pygame.image.load("assets/player.png")
+img_player=pygame.transform.scale(img_player, (10,20))
 def countn(x,y):
     n=0
     if x>0 and maze[x-1][y]>0   : n=n+1
@@ -44,6 +47,7 @@ def preparerLaby():
     """
     maze=[]
     visited=[]
+    backtrack=0
     # generate a free array; filled of 1:   (walls) 
     for i in range(0,NBCELL):
         line=[]
@@ -84,6 +88,7 @@ def genererLaby(x,y):
     return True if a path is found
     return false if no path found 
     """
+    global backtrack
     #we are on the last cell (EXIT ! yeaaah!) :
     if x==NBCELL-2 and y==NBCELL-2 :
          return True
@@ -99,7 +104,7 @@ def genererLaby(x,y):
         return False
     # for each choice...
     for choix in listechoix :
-        afficherLaby()
+        afficherLaby(x,y)
         #... try to find a way out :
         if genererLaby(choix[0],choix[1]):
             # if it is, adding our point.
@@ -107,13 +112,16 @@ def genererLaby(x,y):
             return True
             
     # all the possible ways are wrong : return false...
+    # and count backtracking
+    backtrack = backtrack +1
     return False
     
 
 
-def afficherLaby():
+def afficherLaby(curx,cury):
     """
     procedure to draw the maze on the screen (isometric view)
+    curx & cury is coordinate of current point
     """
     screen.fill((0,0,0)) # Beware : the parameter is a tuple
     # size of a square on the screen : 
@@ -135,6 +143,18 @@ def afficherLaby():
                 screen.blit(img_tree1,(280+i*(cellw-6)-j*12,10+j*(cellw-13)+i*7))
             if (maze[i][j]==3):
                 screen.blit(img_spot,(280+i*(cellw-6)-j*12,40+j*(cellw-13)+i*7))
+    screen.blit(img_player,(290+curx*(cellw-6)-cury*12,25+cury*(cellw-13)+curx*7))
+
+    # text rendering
+    if generating :
+        img = font.render('Rendering', True, (255,255,255))
+    else :
+        img = font.render('Finished', True, (255,255,255))
+    screen.blit(img, (20, 20))
+    
+    img = font.render(("BackTracking=" + str(backtrack)), True, (255,255,255))
+    screen.blit(img, (20, 40))
+
     # update the screen display :   
     pygame.display.flip()
     #some slow down procedure ...
@@ -150,6 +170,9 @@ screen = pygame.display.set_mode(size)
 # important : the window's caption :
 pygame.display.set_caption("Laby algo")
 clock = pygame.time.Clock()
+
+font = pygame.font.SysFont(None, 24)
+
 
 # get a new maze & its visited array :
 maze,visited = preparerLaby()
@@ -182,10 +205,6 @@ while playing:
             print("No way found...trying again")
             maze,visited = preparerLaby()
 
-            
-            
-
-    afficherLaby()
    
 pygame.quit()
 

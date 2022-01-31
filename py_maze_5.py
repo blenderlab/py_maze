@@ -14,7 +14,6 @@ NBCELL = 20 #size of the square maze (width)
 maze = [] # contains the area
 visited = [] # contains the visited spots
 backtrack = 0
-vue3D = False
 
 def countn(x,y):
     '''
@@ -57,6 +56,7 @@ def preparerLaby():
     backtrack=0
     maze = viderLaby()
     visited = viderVisited()
+    
 
     # send the 2 arrays : maze & visited 
     return(maze,visited)
@@ -77,6 +77,21 @@ def prochainesCase(x,y):
          if (countn(x+1,y)==3):possibles.append((x+1,y))
     random.shuffle(possibles)
     return (possibles)
+def prochainesCaseSortie(x,y):
+    """
+    returns a collection of tuples (x,y) of available places to go
+    """
+    p = []
+    if (x>1 and maze[x-1][y]==0 and visited[x-1][y]==0 )  :
+        p.append((x-1,y))
+    if (y>1  and maze[x][y-1]==0 and visited[x][y-1]==0) :
+        p.append((x,y-1))
+    if (y<NBCELL  and maze[x][y+1]==0 and visited[x][y+1]==0) :
+        p.append((x,y+1))
+    if (x<NBCELL  and maze[x+1][y]==0 and visited[x+1][y]==0) :
+        p.append((x+1,y))
+    random.shuffle(p)
+    return (p)
 
 def genererLaby(x,y): 
     """
@@ -101,44 +116,57 @@ def genererLaby(x,y):
         return False
     # for each choice...
     for choix in listechoix :
-        afficherLaby(maze,x,y,iso=vue3D)
+        afficherLaby(maze,x,y,)
         #... try to find a way out :
         if genererLaby(choix[0],choix[1]):
             # if it is, adding our point.
             maze[choix[0]][choix[1]]=0
             return True
-    afficherLaby(maze,x,y,iso=vue3D)
+    afficherLaby(maze,x,y,bt=True)
         
     # all the possible ways are wrong : return false...
     # and count backtracking
     backtrack = backtrack +1
-    afficherTexte(maze,22,2,"Backtracking...")
-
     return False
-
-    
-
+def debug(t):
+    for i in range(NBCELL):
+        for j in range(NBCELL):
+            print(t[i][j],end="")
+        print()
+        
 def sortirLaby(x,y):
     global backtrack
     #we are on the last cell (EXIT ! yeaaah!) :
     if x==NBCELL-2 and y==NBCELL-2 :
-         afficherLaby(maze,x,y,player=True,iso=vue3D)
+         afficherLaby(maze,x,y,player=True)
          return True
-    ## Some code to add here ! 
+     # Stipulate that our position is part of the path.
+    visited[x][y]=1
+    # find other possibles ways:
+    listechoix = prochainesCaseSortie(x,y)
+    afficherLaby(maze,x,y,player=True)
+         
+    # if no way out -> backtrack : position is not a path and return false.
+    if len(listechoix)==0:
+        return False
+    # for each choice...
+    for choix in listechoix :
+        #... try to find a way out :
+        if sortirLaby(choix[0],choix[1]):
+            # if it is, adding our point.
+            return True
+            
+    # all the possible ways are wrong : return false...
+    # and count backtracking
+    backtrack = backtrack +1
+    afficherLaby(maze,x,y,player=True,bt=True)
 
-def algoLee(x,y):
-    for i in range(NBCELL):
-        for j in range(NBCELL):
-            if maze[i][j]==0:
-                afficherTexte(maze,i,j,"0",iso=vue3D,color=BLACK)
-
+    return False
 
 #main loop :
 playing = True
 maze,visited = preparerLaby()
-if genererLaby(1,1):
-    afficherTexte(maze,22,2,"Fini")
-
+genererLaby(1,1)
 
 while playing:
     # manage events (keys....)
@@ -156,9 +184,6 @@ while playing:
                 maze,visited = preparerLaby()
                 if genererLaby(1,1):
                     print ("FIni !")
-            if event.key == pygame.K_l:
-                visited = viderVisited()
-                algoLee(1,1)
 
             if event.key == pygame.K_x:
                 visited = viderVisited()
@@ -166,6 +191,8 @@ while playing:
                     print ("Sorti !")
                 else:
                     print ("pas de sortie....")
+
+    
 
    
 pygame.quit()
